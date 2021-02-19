@@ -17,7 +17,9 @@ time_table_drop = ""
 
 # CREATE TABLES
 
-staging_events_table_create= ("""
+staging_events_table_create= (
+    """
+    CREATE TABLE staging_events
 """)
 
 staging_songs_table_create = ("""
