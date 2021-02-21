@@ -6,7 +6,7 @@ module "sg" {
   vpc_id = "vpc-d0f07fb4"
 
   # Allow ingress rules to be accessed only within current VPC
-  ingress_cidr_blocks = ["172.31.0.0/16", "165.225.241.67/32"]
+  ingress_cidr_blocks = ["172.31.0.0/16", "87.214.33.143/32"]
 
   # Allow all rules for all protocols
   egress_rules = ["all-all"]
@@ -21,8 +21,9 @@ module "redshift" {
   cluster_number_of_nodes = 1
 
   cluster_database_name   = "dwh"
-  cluster_master_username = "dwhuser"
-  cluster_master_password = "Passw0rd"
+  cluster_master_username = var.master_username
+  cluster_master_password = var.master_password
+
 
   # Group parameters
   wlm_json_configuration = "[{\"query_concurrency\": 5}]"
