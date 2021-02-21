@@ -10,7 +10,7 @@ config.read('dwh.cfg')
 staging_events_table_drop = "DROP TABLE IF EXISTS staging_events"
 staging_songs_table_drop  = "DROP TABLE IF EXISTS staging_songs"
 songplay_table_drop       = "DROP TABLE IF EXISTS songplay"
-user_table_drop           = "DROP TABLE IF EXISTS user"
+user_table_drop           = "DROP TABLE IF EXISTS users"
 song_table_drop           = "DROP TABLE IF EXISTS song"
 artist_table_drop         = "DROP TABLE IF EXISTS artist"
 time_table_drop           = "DROP TABLE IF EXISTS time"
@@ -62,7 +62,7 @@ staging_songs_table_create = (
 songplay_table_create = (
     """
     CREATE TABLE songplay (
-        songplay_id SERIAL PRIMARY KEY, 
+        songplay_id INT PRIMARY KEY, 
         start_time BIGINT NOT NULL, 
         user_id INT,
         level VARCHAR(255), 
