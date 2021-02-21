@@ -1,15 +1,3 @@
-######
-# VPC
-######
-# module "dwh-vpc" {
-#   source           = "terraform-aws-modules/vpc/aws"
-#   version          = "~> 2.0"
-#   name             = "dwh-vpc"
-#   cidr             = "10.10.0.0/16"
-#   azs              = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
-#   redshift_subnets = ["10.10.41.0/24", "10.10.42.0/24", "10.10.43.0/24"]
-# }
-
 module "sg" {
   source  = "terraform-aws-modules/security-group/aws//modules/redshift"
   version = "~> 3.0"
@@ -18,7 +6,7 @@ module "sg" {
   vpc_id = "vpc-d0f07fb4"
 
   # Allow ingress rules to be accessed only within current VPC
-  ingress_cidr_blocks = ["172.31.0.0/16"]
+  ingress_cidr_blocks = ["172.31.0.0/16", "165.225.241.67/32"]
 
   # Allow all rules for all protocols
   egress_rules = ["all-all"]
@@ -46,3 +34,4 @@ module "redshift" {
   # IAM Roles
   cluster_iam_roles = [aws_iam_role.redshift-iam-role.arn]
 }
+
