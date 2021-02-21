@@ -21,9 +21,10 @@ module "redshift" {
   cluster_number_of_nodes = 1
 
   cluster_database_name   = "dwh"
-  cluster_master_username = var.master_username
-  cluster_master_password = var.master_password
+  cluster_master_username = var.cluster_master_username
+  cluster_master_password = var.cluster_master_password
 
+  publicly_accessible = true
 
   # Group parameters
   wlm_json_configuration = "[{\"query_concurrency\": 5}]"
