@@ -11,8 +11,8 @@ staging_events_table_drop = "DROP TABLE IF EXISTS staging_events"
 staging_songs_table_drop  = "DROP TABLE IF EXISTS staging_songs"
 songplay_table_drop       = "DROP TABLE IF EXISTS songplay"
 user_table_drop           = "DROP TABLE IF EXISTS users"
-song_table_drop           = "DROP TABLE IF EXISTS song"
-artist_table_drop         = "DROP TABLE IF EXISTS artist"
+song_table_drop           = "DROP TABLE IF EXISTS songs"
+artist_table_drop         = "DROP TABLE IF EXISTS artists"
 time_table_drop           = "DROP TABLE IF EXISTS time"
 
 # CREATE TABLES
@@ -24,7 +24,7 @@ staging_events_table_create= (
         auth VARCHAR,
         firstName VARCHAR,
         gender VARCHAR,
-        itemInSession INT,
+        itemInSession BIGINT,
         lastName VARCHAR,
         length FLOAT,
         level VARCHAR,
@@ -34,8 +34,8 @@ staging_events_table_create= (
         registration FLOAT,
         sessionId INT,
         song VARCHAR,
-        status INT,
-        ts INT,
+        status BIGINT,
+        ts BIGINT,
         userAgent VARCHAR,
         userId INT
     );
@@ -63,7 +63,7 @@ songplay_table_create = (
     """
     CREATE TABLE songplay (
         songplay_id INT PRIMARY KEY, 
-        start_time BIGINT NOT NULL, 
+        start_time TIMESTAMP NOT NULL, 
         user_id INT,
         level VARCHAR(255), 
         song_id VARCHAR(255), 
@@ -85,7 +85,7 @@ user_table_create = (
         level VARCHAR(255)
     );
     """
-)
+)   
 
 song_table_create = (
     """
@@ -127,28 +127,91 @@ time_table_create = (
 
 # STAGING TABLES
 
-staging_events_copy = ("""
-""").format()
+staging_songs_copy = (
+    """
+    COPY staging_songs from 's3://udacity-dend/song-data/A/A'
+    CREDENTIALS 'aws_iam_role={}'
+    region 'us-west-2' 
+    JSON 'auto';
+    """
+    ).format(config.get('IAM_ROLE', 'ARN'))
 
-staging_songs_copy = ("""
-""").format()
+staging_events_copy = (
+    """
+    COPY staging_events from 's3://udacity-dend/log-data'
+    CREDENTIALS 'aws_iam_role={}'
+    region 'us-west-2' compupdate OFF
+    JSON 's3://udacity-dend/log_json_path.json';
+    """
+    ).format(config.get('IAM_ROLE', 'ARN'))
 
 # FINAL TABLES
 
-songplay_table_insert = ("""
-""")
+songplay_table_insert = (
+    """
+    INSERT INTO songplay (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+    SELECT  ss.song_id AS songplay_id
+            ss.ts AS DATE
+            ss.userid,
+            ss.level,
+            ss.song_id
+            ss.artist_id
+            ss.session
+    FROM staging_songs ss
+    JOIN staging_events se
+    """
+)
 
-user_table_insert = ("""
-""")
+user_table_insert = (
+    """
+    INSERT INTO users (user_id, first_name, last_name, gender, level)
+    SELECT se.userid,
+           se.firstname,
+           se.lastname,
+           se.gender,
+           se.level
+    FROM staging_events se
+    WHERE userid IS NOT NULL
+    """
+)
 
-song_table_insert = ("""
-""")
+song_table_insert = (
+    """
+    INSERT INTO songs (song_id, title, artist_id, year, duration)
+    SELECT  ss.song_id,
+            ss.title,
+            ss.artist_id,
+            ss.year,
+            ss.duration
+    FROM staging_songs ss
+    """
+)
 
-artist_table_insert = ("""
-""")
+artist_table_insert = (
+    """
+    INSERT INTO artists (artist_id, name, location, latitude, longitude)
+    SELECT  ss.artist_id,
+            ss.artist_name,
+            ss.artist_location,
+            ss.artist_latitude,
+            ss.artist_longitude
+    FROM staging_songs ss
+    """
+)
 
-time_table_insert = ("""
-""")
+time_table_insert = (
+    """
+    INSERT  INTO time (start_time, hour, day, week, month, year, weekday)
+    SELECT  DISTINCT start_time,
+            EXTRACT (hour FROM start_time) AS hour,
+            EXTRACT (day FROM start_time) AS day,
+            EXTRACT (week FROM start_time) AS week,
+            EXTRACT (month FROM start_time) AS month,
+            EXTRACT (year FROM start_time) AS year,
+            EXTRACT (weekday FROM start_time) AS weekday
+    FROM (SELECT TIMESTAMP 'epoch' + se.ts/1000 * INTERVAL '1 Second' as start_time FROM staging_events se)
+    """
+)
 
 # QUERY LISTS
 
