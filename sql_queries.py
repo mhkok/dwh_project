@@ -62,8 +62,8 @@ staging_songs_table_create = (
 songplay_table_create = (
     """
     CREATE TABLE songplay (
-        songplay_id INT PRIMARY KEY, 
-        start_time TIMESTAMP NOT NULL, 
+        songplay_id INT IDENTITY(0,1), 
+        start_time BIGINT NOT NULL, 
         user_id INT,
         level VARCHAR(255), 
         song_id VARCHAR(255), 
@@ -147,21 +147,6 @@ staging_events_copy = (
 
 # FINAL TABLES
 
-songplay_table_insert = (
-    """
-    INSERT INTO songplay (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
-    SELECT  ss.song_id AS songplay_id
-            ss.ts AS DATE
-            ss.userid,
-            ss.level,
-            ss.song_id
-            ss.artist_id
-            ss.session
-    FROM staging_songs ss
-    JOIN staging_events se
-    """
-)
-
 user_table_insert = (
     """
     INSERT INTO users (user_id, first_name, last_name, gender, level)
@@ -210,6 +195,24 @@ time_table_insert = (
             EXTRACT (year FROM start_time) AS year,
             EXTRACT (weekday FROM start_time) AS weekday
     FROM (SELECT TIMESTAMP 'epoch' + se.ts/1000 * INTERVAL '1 Second' as start_time FROM staging_events se)
+    """
+)
+
+songplay_table_insert = (
+    """
+   INSERT INTO songplay (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+   SELECT   se.ts,
+            se.userid,
+            se.level,
+            ss.song_id,
+            ss.artist_id,
+            se.sessionid,
+            se.location,
+            se.useragent
+    FROM staging_events se 
+    LEFT JOIN staging_songs ss ON (se.artist = ss.artist_name) 
+    AND (se.length = ss.duration)
+    WHERE se.page = 'NextSong';
     """
 )
 
