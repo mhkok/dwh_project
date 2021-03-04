@@ -6,7 +6,7 @@ module "sg" {
   vpc_id = "vpc-d0f07fb4"
 
   # Allow ingress rules to be accessed only within current VPC
-  ingress_cidr_blocks = ["172.31.0.0/16", "87.214.33.143/32"]
+  ingress_cidr_blocks = var.ingress_cidr_blocks
 
   # Allow all rules for all protocols
   egress_rules = ["all-all"]
